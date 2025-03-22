@@ -70,7 +70,7 @@ public class ShapeGroup extends Shape {
     public boolean contains(double x, double y) {
         for (Shape shape : shapes) {
             if (shape.contains(x, y)) {
-                notifyObservers();
+//                notifyObservers();
                 return true;
             }
         }

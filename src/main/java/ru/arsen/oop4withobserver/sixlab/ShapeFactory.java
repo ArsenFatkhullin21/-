@@ -4,16 +4,15 @@ import javafx.scene.paint.Color;
 
 import ru.arsen.oop4withobserver.model.*;
 
-public class ShapeFactory {
+public class ShapeFactory implements AbstractShapeFactory{
 
-    public static Shape createShape(String shapeName, String data) {
+    public Shape createShape(String shapeName, String data) {
         String[] params = data.split(" ");
 
         // Убедимся, что параметров достаточно
         if (params.length < 6) {
             throw new IllegalArgumentException("One or more parameters are invalid: " + data);
         }
-
 
         double x = Double.parseDouble(params[0]);
         double y = Double.parseDouble(params[1]);

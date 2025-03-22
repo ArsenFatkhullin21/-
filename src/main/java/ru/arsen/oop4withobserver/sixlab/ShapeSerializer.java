@@ -2,6 +2,7 @@ package ru.arsen.oop4withobserver.sixlab;
 
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import ru.arsen.oop4withobserver.Paint;
 import ru.arsen.oop4withobserver.model.Shape;
 import ru.arsen.oop4withobserver.model.ShapeGroup;
 import ru.arsen.oop4withobserver.myList.MyList;
@@ -9,6 +10,13 @@ import java.io.*;
 import java.util.Arrays;
 
 public class ShapeSerializer {
+
+    private static Paint paint = null;
+
+    public ShapeSerializer(Paint paint) {
+        this.paint = paint;
+    }
+
 
     public static boolean saveShapes(MyList<Shape> shapes, Stage stage) {
         FileChooser fileChooser = new FileChooser();
@@ -47,7 +55,7 @@ public class ShapeSerializer {
         }
     }
 
-    public static void loadShapes(MyList<Shape> shapes, Stage stage, ShapeFactory shapeFactory) {
+    public static void loadShapes(MyList<Shape> shapes, Stage stage, AbstractShapeFactory shapeFactory) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Открыть файл");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Текстовый файл", "*.txt"));
@@ -57,7 +65,7 @@ public class ShapeSerializer {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 int numShapes = Integer.parseInt(reader.readLine());
                 for (int i = 0; i < numShapes; i++) {
-                    Shape shape = loadShape(reader, shapeFactory);
+                    Shape shape = loadShape(reader, (ShapeFactory) shapeFactory);
                     if (shape != null) {
                         shapes.add(shape);
                     }
@@ -70,7 +78,7 @@ public class ShapeSerializer {
     }
 
     // Метод для загрузки одной фигуры, использующий ShapeFactory
-    private static Shape loadShape(BufferedReader reader, ShapeFactory shapeFactory) throws IOException {
+    private static Shape loadShape(BufferedReader reader, AbstractShapeFactory shapeFactory) throws IOException {
         String line = reader.readLine();
         if (line == null) {
             return null;
@@ -91,10 +99,13 @@ public class ShapeSerializer {
                     shapeGroup.addShape(groupShape); // Добавляем фигуру в группу
                 }
             }
+            shapeGroup.addObserver(shape1 -> paint.draw(paint.getGraphicsContext()));
             return shapeGroup;
         } else {
             // Если не группа, используем фабрику для создания фигуры
-            return shapeFactory.createShape(shapeType, shapeParameters);
+            Shape shape = shapeFactory.createShape(shapeType, shapeParameters);
+            shape.addObserver(shape1 -> paint.draw(paint.getGraphicsContext()));
+            return shape;
         }
     }
 }

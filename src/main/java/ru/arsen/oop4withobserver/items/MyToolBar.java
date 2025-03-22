@@ -227,7 +227,8 @@ public class MyToolBar {
 
         MenuItem openMenuItem = new MenuItem("Открыть");
         openMenuItem.setOnAction(event -> {
-            ShapeSerializer.loadShapes(shapes, stage, new ShapeFactory());
+            ShapeSerializer shapeSerializer = new ShapeSerializer(paint);
+            shapeSerializer.loadShapes(shapes, stage, new ShapeFactory());
             paint.draw(paint.getGraphicsContext());
             System.out.println(shapes);
         });

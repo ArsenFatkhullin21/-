@@ -4,11 +4,10 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.ToolBar;
+import javafx.scene.control.*;
 import javafx.scene.input.*;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -17,6 +16,7 @@ import ru.arsen.oop4withobserver.items.MyToolBar;
 import ru.arsen.oop4withobserver.model.*;
 import ru.arsen.oop4withobserver.myList.MyList;
 import ru.arsen.oop4withobserver.observer.ShapeLogger;
+import ru.arsen.oop4withobserver.sevenLab.ShapeTreeView;
 import ru.arsen.oop4withobserver.sixlab.ShapeSerializer;
 
 import java.util.HashMap;
@@ -50,7 +50,7 @@ public class Paint extends Application {
     Canvas canvas = new Canvas(1000,500);
 
     private final GraphicsContext gc = canvas.getGraphicsContext2D();
-    Pane root = new Pane(canvas);
+   ;
 
     ShapeLogger shapeLogger = new ShapeLogger();
 
@@ -61,6 +61,13 @@ public class Paint extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
+        ShapeTreeView shapeTreeView = new ShapeTreeView(shapes);
+        TreeView<Shape> treeView = shapeTreeView.getTreeView();
+
+        Pane root = new Pane(canvas);
+
+        FlowPane flowPane = new FlowPane(root);
 
         root.setMinHeight(500);
         root.setPrefSize(1500, 1000);
@@ -132,17 +139,7 @@ public class Paint extends Application {
 
         scene.getAccelerators().put(commandG, () -> {
             if (highlightedShapes.size() > 1) {
-                double minX = Double.MAX_VALUE;
-                double minY = Double.MAX_VALUE;
-                double maxX = Double.MIN_VALUE;
-                double maxY = Double.MIN_VALUE;
 
-                for (Shape shape : highlightedShapes) {
-                    minX = Math.min(minX, shape.getX());
-                    minY = Math.min(minY, shape.getY());
-                    maxX = Math.max(maxX, shape.getX() + shape.getWidth());
-                    maxY = Math.max(maxY, shape.getY() + shape.getHeight());
-                }
 
                 // Создаем группу
                 ShapeGroup group = new ShapeGroup();
