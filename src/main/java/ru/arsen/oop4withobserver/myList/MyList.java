@@ -1,7 +1,6 @@
 package ru.arsen.oop4withobserver.myList;
 
-import java.util.Iterator;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class MyList<T> implements Iterable<T> {
@@ -10,14 +9,29 @@ public class MyList<T> implements Iterable<T> {
     private Node<T> tail;
     private int size;
 
-    // Конструктор по умолчанию
+    // ===== Новое: список наблюдателей =====
+    private final List<Consumer<MyList<T>>> observers = new ArrayList<>();
+
+    // Метод для добавления наблюдателя
+    public void addObserver(Consumer<MyList<T>> observer) {
+        observers.add(observer);
+    }
+
+    // Метод для уведомления всех наблюдателей
+    private void notifyObservers() {
+        for (Consumer<MyList<T>> observer : observers) {
+            observer.accept(this);
+        }
+    }
+
+    // ========================
+
     public MyList() {
         this.head = null;
         this.tail = null;
         this.size = 0;
     }
 
-    // Добавление элемента в конец списка
     public void add(T value) {
         Node<T> newNode = new Node<>(value);
         if (head == null) {
@@ -28,9 +42,9 @@ public class MyList<T> implements Iterable<T> {
             tail = newNode;
         }
         size++;
+        notifyObservers(); // 🔔 уведомление
     }
 
-    // Получение элемента по индексу
     public T get(int index) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index out of bounds");
@@ -42,15 +56,14 @@ public class MyList<T> implements Iterable<T> {
         return temp.getData();
     }
 
-    // Удаление элемента по индексу
     public void remove(int index) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index out of bounds");
         }
 
-        if (index == 0) { // Удаление первого элемента
+        if (index == 0) {
             head = head.getNext();
-            if (head == null) { // Если список стал пустым
+            if (head == null) {
                 tail = null;
             }
         } else {
@@ -60,15 +73,28 @@ public class MyList<T> implements Iterable<T> {
             }
             temp.setNext(temp.getNext().getNext());
 
-            if (temp.getNext() == null) { // Если удаляем последний элемент
+            if (temp.getNext() == null) {
                 tail = temp;
             }
         }
-
         size--;
+        notifyObservers(); // 🔔 уведомление
     }
 
-    // Удаление элемента по значению
+
+    public int indexOf(T value) {
+        Node<T> current = head;
+        int index = 0;
+        while (current != null) {
+            if (current.getData().equals(value)) {
+                return index;
+            }
+            current = current.getNext();
+            index++;
+        }
+        return -1;
+    }
+
     public void remove(T value) {
         Node<T> current = head;
         Node<T> previous = null;
@@ -76,14 +102,15 @@ public class MyList<T> implements Iterable<T> {
         while (current != null) {
             if (current.getData().equals(value)) {
                 if (previous == null) {
-                    head = current.getNext();  // Если удаляем первый элемент
+                    head = current.getNext();
                 } else {
-                    previous.setNext(current.getNext());  // Удаляем из середины или конца
+                    previous.setNext(current.getNext());
                 }
-                if (current.getNext() == null) { // Если удаляем последний элемент
+                if (current.getNext() == null) {
                     tail = previous;
                 }
                 size--;
+                notifyObservers(); // 🔔 уведомление
                 return;
             }
             previous = current;
@@ -91,24 +118,21 @@ public class MyList<T> implements Iterable<T> {
         }
     }
 
-    // Удаление всех элементов из списка
     public void removeAll(Iterable<T> otherList) {
         for (T value : otherList) {
-            remove(value);  // Для каждого элемента в otherList удаляем его из текущего списка
+            remove(value);
         }
+        notifyObservers(); // 🔔 уведомление
     }
 
-    // Возвращает размер списка
     public int size() {
         return size;
     }
 
-    // Проверка на пустоту списка
     public boolean isEmpty() {
         return size == 0;
     }
 
-    // Проверка, содержится ли значение в списке
     public boolean contains(T value) {
         Node<T> temp = head;
         while (temp != null) {
@@ -120,14 +144,13 @@ public class MyList<T> implements Iterable<T> {
         return false;
     }
 
-    // Удаление всех элементов из списка
     public void removeAll() {
         head = null;
         tail = null;
         size = 0;
+        notifyObservers(); // 🔔 уведомление
     }
 
-    // Печать списка
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[");
@@ -143,36 +166,33 @@ public class MyList<T> implements Iterable<T> {
         return sb.toString();
     }
 
-    // Итератор для обхода списка
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
-            private Node<T> current = head;  // Начинаем с головы списка
+            private Node<T> current = head;
 
             @Override
             public boolean hasNext() {
-                return current != null;  // Есть следующий элемент?
+                return current != null;
             }
 
             @Override
             public T next() {
                 if (!hasNext()) {
-                    throw new java.util.NoSuchElementException();  // Если нет следующего элемента, выбрасываем исключение
+                    throw new java.util.NoSuchElementException();
                 }
-                T data = current.getData();  // Берем данные текущего элемента
-                current = current.getNext();  // Переходим к следующему элементу
+                T data = current.getData();
+                current = current.getNext();
                 return data;
             }
         };
     }
 
-    // Метод forEach, вызываемый для каждого элемента
     @Override
     public void forEach(Consumer<? super T> action) {
         Iterable.super.forEach(action);
     }
 
-    // Метод spliterator
     @Override
     public Spliterator<T> spliterator() {
         return Iterable.super.spliterator();

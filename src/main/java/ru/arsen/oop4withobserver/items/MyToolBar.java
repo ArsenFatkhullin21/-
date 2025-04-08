@@ -75,7 +75,7 @@ public class MyToolBar {
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1);
 
-        gc.strokeLine( width, height,0,0);
+        gc.strokeLine( 0, height,width,0);
 
         return canvas;
     }
@@ -91,6 +91,29 @@ public class MyToolBar {
         gc.setStroke(Color.BLACK);
 
         gc.strokeRect(0, 0, width, height);
+        return canvas;
+    }
+
+
+    private Canvas createArrowGraphic(double width, double height) {
+        Canvas canvas = new Canvas(width, height);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setStroke(Color.BLACK);
+        gc.setLineWidth(2);
+
+        double startX = 0;
+        double startY = height;
+        double endX = width;
+        double endY = 0;
+
+
+
+        gc.strokeLine(startX, startY, endX, endY);
+
+        double arrowHeadSize = 4;
+        double angle = Math.atan2(endY - startY, endX - startX);
+        gc.strokeLine(endX, endY, endX - arrowHeadSize * Math.cos(angle - Math.PI / 6), endY - arrowHeadSize * Math.sin(angle - Math.PI / 6));
+        gc.strokeLine(endX, endY, endX - arrowHeadSize * Math.cos(angle + Math.PI / 6), endY - arrowHeadSize * Math.sin(angle + Math.PI / 6));
         return canvas;
     }
 
@@ -146,9 +169,9 @@ public class MyToolBar {
 
 
         Button highlightRectangleButton = new Button();
-        highlightRectangleButton.setGraphic(createHighlightRectangleGraphic(10, 10));
+        highlightRectangleButton.setGraphic(createArrowGraphic(10, 10));
         highlightRectangleButton.setOnAction(actionEvent -> {
-            Paint.chosenShape = "highlightRectangle";
+            Paint.chosenShape = "ArrowShape";
         });
 
 
@@ -216,7 +239,7 @@ public class MyToolBar {
 
         // Добавляем кнопки в панель инструментов
         toolBar.getItems().addAll(cursorButton,
-                rectangleButton, circleButton, triangleButton, lineButton, changeColorButton, currentColorRectangle,
+                rectangleButton, circleButton, triangleButton, lineButton,highlightRectangleButton, changeColorButton, currentColorRectangle,
                 gridPane);
     }
 

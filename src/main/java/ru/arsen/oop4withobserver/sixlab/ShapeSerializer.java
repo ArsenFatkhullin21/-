@@ -3,20 +3,22 @@ package ru.arsen.oop4withobserver.sixlab;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import ru.arsen.oop4withobserver.Paint;
+import ru.arsen.oop4withobserver.model.ArrowShape;
 import ru.arsen.oop4withobserver.model.Shape;
 import ru.arsen.oop4withobserver.model.ShapeGroup;
 import ru.arsen.oop4withobserver.myList.MyList;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class ShapeSerializer {
 
     private static Paint paint = null;
 
     public ShapeSerializer(Paint paint) {
-        this.paint = paint;
+        ShapeSerializer.paint = paint;
     }
-
 
     public static boolean saveShapes(MyList<Shape> shapes, Stage stage) {
         FileChooser fileChooser = new FileChooser();
@@ -27,9 +29,14 @@ public class ShapeSerializer {
         if (file != null) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
                 writer.write(shapes.size() + "\n");
+
+                // Контекст всех реально сохранённых фигур (для ArrowShape индексов)
+                List<Shape> contextShapes = new ArrayList<>();
+
                 for (Shape shape : shapes) {
-                    saveShape(writer, shape);
+                    saveShape(writer, shape, contextShapes);
                 }
+
                 return true;
             } catch (IOException e) {
                 System.err.println("Ошибка при сохранении: " + e.getMessage());
@@ -39,19 +46,26 @@ public class ShapeSerializer {
         return false;
     }
 
-    private static void saveShape(BufferedWriter writer, Shape shape) throws IOException {
+    private static void saveShape(Writer writer, Shape shape, List<Shape> contextShapes) throws IOException {
+        if (shape instanceof ShapeGroup group) {
+            writer.write("ShapeGroup " + group.save() + "\n");
+            writer.write(group.getShapes().size() + "\n");
 
-        if (shape instanceof ShapeGroup) {
-            ShapeGroup shapeGroup = (ShapeGroup) shape;
-
-            writer.write( shapeGroup.getClass().getSimpleName() + " "+ shapeGroup.save() +"\n");
-            writer.write( shapeGroup.getShapes().size() + "\n");
-            for (Shape groupShape : shapeGroup.getShapes()) {
-                saveShape(writer, groupShape);
+            for (Shape inner : group.getShapes()) {
+                saveShape(writer, inner, contextShapes); // Рекурсивное сохранение подфигур
             }
-        } else {
+        } else if (shape instanceof ArrowShape arrow) {
+            int indexA = contextShapes.indexOf(arrow.getObjectA());
+            int indexB = contextShapes.indexOf(arrow.getObjectB());
 
+            writer.write("ArrowShape " + indexA + " " + indexB + "\n");
+        } else {
             writer.write(shape.getClass().getSimpleName() + " " + shape.save() + "\n");
+        }
+
+        // Добавляем в контекст только НЕ группы (Arrow тоже нужен, чтобы знать порядок фигур для стрелок)
+        if (!(shape instanceof ShapeGroup)) {
+            contextShapes.add(shape);
         }
     }
 
@@ -64,8 +78,12 @@ public class ShapeSerializer {
         if (file != null) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 int numShapes = Integer.parseInt(reader.readLine());
+
+                // Контекст, чтобы восстанавливать ArrowShape по индексам
+                MyList<Shape> contextShapes = new MyList<>();
+
                 for (int i = 0; i < numShapes; i++) {
-                    Shape shape = loadShape(reader, (ShapeFactory) shapeFactory);
+                    Shape shape = loadShape(reader, (ShapeFactory) shapeFactory, contextShapes);
                     if (shape != null) {
                         shapes.add(shape);
                     }
@@ -77,34 +95,32 @@ public class ShapeSerializer {
         }
     }
 
-    // Метод для загрузки одной фигуры, использующий ShapeFactory
-    private static Shape loadShape(BufferedReader reader, AbstractShapeFactory shapeFactory) throws IOException {
+    private static Shape loadShape(BufferedReader reader, AbstractShapeFactory shapeFactory, MyList<Shape> contextShapes) throws IOException {
         String line = reader.readLine();
-        if (line == null) {
-            return null;
-        }
+        if (line == null) return null;
 
         String[] parts = line.split(" ");
         String shapeType = parts[0];
         String shapeParameters = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
 
         if (shapeType.equals("ShapeGroup")) {
+            ShapeGroup shapeGroup = (ShapeGroup) shapeFactory.createShape(shapeType, shapeParameters, new MyList<>());
+            int numInner = Integer.parseInt(reader.readLine());
 
-            ShapeGroup shapeGroup = (ShapeGroup) shapeFactory.createShape(shapeType, shapeParameters);
-
-            int numShapesInGroup = Integer.parseInt(reader.readLine());
-            for (int i = 0; i < numShapesInGroup; i++) {
-                Shape groupShape = loadShape(reader, shapeFactory); // Рекурсивно загружаем фигуру внутри группы
-                if (groupShape != null) {
-                    shapeGroup.addShape(groupShape); // Добавляем фигуру в группу
+            for (int i = 0; i < numInner; i++) {
+                Shape subShape = loadShape(reader, shapeFactory, contextShapes);
+                if (subShape != null) {
+                    shapeGroup.addShape(subShape);
                 }
             }
-            shapeGroup.addObserver(shape1 -> paint.draw(paint.getGraphicsContext()));
+
+            shapeGroup.addObserver(s -> paint.draw(paint.getGraphicsContext()));
             return shapeGroup;
+
         } else {
-            // Если не группа, используем фабрику для создания фигуры
-            Shape shape = shapeFactory.createShape(shapeType, shapeParameters);
-            shape.addObserver(shape1 -> paint.draw(paint.getGraphicsContext()));
+            Shape shape = shapeFactory.createShape(shapeType, shapeParameters, contextShapes);
+            shape.addObserver(s -> paint.draw(paint.getGraphicsContext()));
+            contextShapes.add(shape);
             return shape;
         }
     }

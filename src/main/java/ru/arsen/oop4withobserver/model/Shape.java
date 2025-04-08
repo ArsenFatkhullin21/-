@@ -199,4 +199,8 @@ public abstract class Shape {
         return x + " " + y + " " + width + " " + height + " " + color.toString() + " " + strokeWeight;
 
     }
+
+    public void removeObserver(ShapeObserver observer) {
+        observers.remove(observer);
+    }
 }

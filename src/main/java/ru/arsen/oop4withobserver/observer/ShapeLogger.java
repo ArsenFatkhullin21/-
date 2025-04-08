@@ -10,4 +10,6 @@ public class ShapeLogger implements ShapeObserver {
                 " | Позиция: (" + shape.getX() + ", " + shape.getY() + ") " +
                 "| Размеры: (" + shape.getWidth() + "x" + shape.getHeight() + ")");
     }
+
+
 }
