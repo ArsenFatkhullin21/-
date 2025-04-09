@@ -80,39 +80,7 @@ public class Paint extends Application {
         rootItem.setExpanded(true);
 
 
-
-        shapeTreeView.setPrefWidth(400);
-        shapeTreeView.setRoot(rootItem);
-        shapeTreeView.setShowRoot(true);
-
-        shapeTreeView.getSelectionModel().selectedItemProperty().addListener((obs, oldItem, newItem) -> {
-            if (newItem != null) {
-                // Получаем имя выбранного элемента в дереве
-                String selectedName = newItem.getValue();
-
-                // Ищем фигуру по имени в списке shapes
-                for (Shape shape : shapes) {
-                    String shapeName = shape.getClass().getSimpleName() + " " + shape.getX() + " " + shape.getY();
-                    if (shapeName.equals(selectedName)) {
-                        // Если нашли соответствующую фигуру, выделяем её
-                        shape.setSelected(true);
-                        if (!shiftIsPressed[0]) {
-                            highlightedShapes.removeAll();
-                            for (Shape shape1 : shapes) {
-                                shape1.setSelected(false);
-                            }
-                        }
-
-                        highlightedShapes.add(shape);
-                        for (Shape hs: highlightedShapes){
-                            hs.setSelected(true);// Добавляем новую выделенную фигуру
-                        }
-                        draw(gc);  // Перерисовываем холст
-                        break;
-                    }
-                }
-            }
-        });
+        shapeTreeViewHandler();
 
 
         shapes.addObserver(list -> rebuildTree(rootItem));
@@ -137,6 +105,43 @@ public class Paint extends Application {
         primaryStage.setScene(scene);
         primaryStage.setTitle("Paint App");
         primaryStage.show();
+
+    }
+
+    private void shapeTreeViewHandler() {
+        shapeTreeView.setPrefWidth(200);
+        shapeTreeView.setMaxWidth(200);
+        shapeTreeView.setRoot(rootItem);
+        shapeTreeView.setShowRoot(true);
+
+        shapeTreeView.getSelectionModel().selectedItemProperty().addListener((obs, oldItem, newItem) -> {
+            if (newItem != null) {
+
+                String selectedName = newItem.getValue();
+
+                // Ищем фигуру по имени в списке shapes
+                for (Shape shape : shapes) {
+                    String shapeName = shape.getClass().getSimpleName() + " " + shape.getX() + " " + shape.getY();
+                    if (shapeName.equals(selectedName)) {
+                        // Если нашли соответствующую фигуру, выделяем её
+                        shape.setSelected(true);
+                        if (!shiftIsPressed[0]) {
+                            highlightedShapes.removeAll();
+                            for (Shape shape1 : shapes) {
+                                shape1.setSelected(false);
+                            }
+                        }
+
+                        highlightedShapes.add(shape);
+                        for (Shape hs: highlightedShapes){
+                            hs.setSelected(true);
+                        }
+                        draw(gc);
+                        break;
+                    }
+                }
+            }
+        });
 
     }
 
@@ -499,14 +504,14 @@ public class Paint extends Application {
 
     private void formSizeListener(Scene scene, Pane root) {
         scene.widthProperty().addListener((obs, oldWidth, newWidth) -> {
-            double newWidthValue = newWidth.doubleValue();
+            double newWidthValue = newWidth.doubleValue()-200;
             root.setPrefWidth(newWidthValue);
             canvas.setWidth(newWidthValue);
             draw(gc);
         });
 
         scene.heightProperty().addListener((obs, oldHeight, newHeight) -> {
-            double newHeightValue = newHeight.doubleValue() - toolBar.getHeight(); // Вычитаем высоту ToolBar
+            double newHeightValue = newHeight.doubleValue() - toolBar.getHeight()-30;
             root.setPrefHeight(newHeightValue);
             canvas.setHeight(newHeightValue);
             draw(gc);
@@ -518,21 +523,20 @@ public class Paint extends Application {
         // Сначала обрабатываем удаление стрелок, связанных с выбранными фигурами
         MyList<Shape> toRemove = new MyList<>();
 
-        // Перебираем все стрелки и собираем те, которые связаны с выбранными фигурами или группами
         for (Shape s : shapes) {
             if (s instanceof ArrowShape arrow) {
                 // Проверяем, связывает ли эта стрелка любую из выбранных фигур или элементов группы
                 for (Shape highlightedShape : highlightedShapes) {
                     if (arrow.getObjectA() == highlightedShape || arrow.getObjectB() == highlightedShape) {
-                        toRemove.add(arrow);  // Добавляем стрелку для удаления
-                        break;  // Нам нужно удалить стрелку только один раз
+                        toRemove.add(arrow);
+                        break;
                     }
 
-                    // Если фигура является группой, проверяем все её элементы
+
                     if (highlightedShape instanceof ShapeGroup group) {
                         for (Shape groupMember : group.getShapes()) {
                             if (arrow.getObjectA() == groupMember || arrow.getObjectB() == groupMember) {
-                                toRemove.add(arrow);  // Добавляем стрелку для удаления
+                                toRemove.add(arrow);
                                 break;
                             }
                         }
@@ -545,8 +549,8 @@ public class Paint extends Application {
         for (Shape s : toRemove) {
             if (s instanceof ArrowShape) {
                 ((ArrowShape) s).removeObservers();
-                removeArrowsIfObjectRemoved(s);// Отменяем регистрацию наблюдателей
-                shapes.remove(s);  // Удаляем стрелку из списка фигур
+                removeArrowsIfObjectRemoved(s);
+                shapes.remove(s);
             }
         }
 
@@ -556,10 +560,10 @@ public class Paint extends Application {
             shape.setSelected(false);
         }
 
-        // Очистить выделение после удаления фигур
+
         highlightedShapes.removeAll();
 
-        // Обновить отрисовку
+
         draw(gc);
     }
 
@@ -628,18 +632,18 @@ public class Paint extends Application {
     }
 
     public void draw(GraphicsContext gc) {
-        // Очищаем холст перед рисованием
+
         gc.clearRect(0, 0, 1500, 1000);
 
-        // Рисуем все фигуры
+
         for (Shape shape : shapes) {
-            shape.draw(gc);  // В методе draw каждой фигуры может быть логика для отображения выделения
+            shape.draw(gc);
         }
 
-        // Синхронизация с деревом: выделяем элемент, соответствующий первой фигуре в highlightedShapes
+
         TreeItem<String> selectedItem = findTreeItemByShape(shapeTreeView.getRoot(), highlightedShapes.isEmpty() ? null : highlightedShapes.get(0));
         if (selectedItem != null) {
-            shapeTreeView.getSelectionModel().select(selectedItem);  // Выбираем элемент в дереве
+            shapeTreeView.getSelectionModel().select(selectedItem);
         }
     }
 
@@ -682,16 +686,15 @@ public class Paint extends Application {
         ButtonType result = alert.showAndWait().orElse(cancelButton);
 
         if (result == saveButton) {
-            boolean saved = ShapeSerializer.saveShapes(shapes, primaryStage);
+            ShapeSerializer serializer = new ShapeSerializer(this);
+            boolean saved = serializer.saveShapes(shapes, primaryStage);
 
             if (saved) {
-
                 primaryStage.close();
                 return true;
             }
             return false;
         } else if (result == closeButton) {
-
             primaryStage.close();
             return true;
         }
@@ -701,23 +704,22 @@ public class Paint extends Application {
 
 
     private void rebuildTree(TreeItem<String> rootItem) {
-        rootItem.getChildren().clear();  // Очищаем старые элементы
+        rootItem.getChildren().clear();
         for (Shape shape : shapes) {
             processNode(rootItem, shape);  // Добавляем новые элементы
         }
-        shapeTreeView.setRoot(rootItem);  // Устанавливаем корень дерева
+        shapeTreeView.setRoot(rootItem);
     }
 
     private void processNode(TreeItem<String> parentItem, Shape shape) {
-        // Формируем строку для отображения в дереве
         String name =
                 shape.getClass().getSimpleName() + " " + shape.getX() + " " + shape.getY();
 
-        // Создаем узел дерева для текущей фигуры
+
         TreeItem<String> item = new TreeItem<>(name);
         parentItem.getChildren().add(item);
 
-        // Если фигура является группой, обрабатываем все её элементы рекурсивно
+
         if (shape instanceof ShapeGroup) {
             ShapeGroup group = (ShapeGroup) shape;
             for (Shape child : group.getShapes()) {
@@ -741,8 +743,8 @@ public class Paint extends Application {
 
         // Удаляем стрелки из списка
         for (ArrowShape arrow : toRemove) {
-            arrow.removeObservers();  // Отменяем регистрацию наблюдателей
-            shapes.remove(arrow);      // Удаляем стрелку из списка фигур
+            arrow.removeObservers();
+            shapes.remove(arrow);
             System.out.println("Стрелка удалена, так как один из объектов исчез.");
         }
     }

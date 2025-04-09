@@ -5,12 +5,11 @@ import javafx.scene.paint.Color;
 import ru.arsen.oop4withobserver.Paint;
 import ru.arsen.oop4withobserver.myList.MyList;
 import ru.arsen.oop4withobserver.observer.ShapeObserver;
-import ru.arsen.oop4withobserver.sevenLab.ArrowObserver;
 
 import java.util.HashMap;
 import java.util.List;
 
-// Стрелка, соединяющая два объекта (A и B)
+
 public class ArrowShape extends Shape implements ShapeObserver {
 
     private Shape objectA;
@@ -85,7 +84,7 @@ public class ArrowShape extends Shape implements ShapeObserver {
         this.objectA = objectA;
         this.objectB = objectB;
 
-        // Начальная позиция стрелки
+
         this.startX = objectA.getX() + objectA.getWidth() / 2;
         this.startY = objectA.getY() + objectA.getHeight() / 2;
         this.endX = objectB.getX() + objectB.getWidth() / 2;
@@ -96,22 +95,7 @@ public class ArrowShape extends Shape implements ShapeObserver {
         objectB.addObserver(this);
     }
 
-//    public ArrowShape(Paint paint, Shape objectA, Shape objectB) {
-//        this.paint = paint;
-//        this.objectA = objectA;
-//        this.objectB = objectB;
-//
-//        this.startX = objectA.getX() + objectA.getWidth() / 2;
-//        this.startY = objectA.getY() + objectA.getHeight() / 2;
-//        this.endX = objectB.getX() + objectB.getWidth() / 2;
-//        this.endY = objectB.getY() + objectB.getHeight() / 2;
-//
-//        // Подписываемся на изменения объектов A и B
-//        objectA.addObserver(this);
-//        objectB.addObserver(this);
-//    }
 
-    // Метод для рисования стрелки
     public void draw(GraphicsContext gc) {
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(2);
@@ -124,7 +108,6 @@ public class ArrowShape extends Shape implements ShapeObserver {
         gc.strokeLine(endX, endY, endX - arrowHeadSize * Math.cos(angle + Math.PI / 6), endY - arrowHeadSize * Math.sin(angle + Math.PI / 6));
 
         if (selected) {
-            // Задаем рамку для выделения, как у линии
             this.x = Math.min(startX, endX);
             this.y = Math.min(startY, endY);
             this.width = Math.abs(endX - startX);
@@ -139,31 +122,30 @@ public class ArrowShape extends Shape implements ShapeObserver {
         double dx = endX - startX;
         double dy = endY - startY;
 
-        // Длина вектора
         double lengthSquared = dx * dx + dy * dy;
 
         if (lengthSquared == 0) {
-            // Старт и конец совпадают (плохой кейс, но на всякий)
+
             return false;
         }
 
-        // Проекция точки (px, py) на отрезок
+
         double t = ((px - startX) * dx + (py - startY) * dy) / lengthSquared;
 
-        // Ограничим проекцию отрезком [0,1]
+
         t = Math.max(0, Math.min(1, t));
 
-        // Точка на отрезке, ближайшая к (px, py)
+
         double projX = startX + t * dx;
         double projY = startY + t * dy;
 
-        // Расстояние от этой точки до (px, py)
+
         double distance = Math.hypot(projX - px, projY - py);
 
-        return distance <= 5; // допустимая погрешность в пикселях
+        return distance <= 5;
     }
 
-    // Метод обновления позиции стрелки при изменении позиции объектов A или B
+
 
 
     @Override
@@ -177,7 +159,10 @@ public class ArrowShape extends Shape implements ShapeObserver {
         }
     }
 
-
+    @Override
+    public String save() {
+        return startX + " " + startY + " " + endX + " " + endY  + " " + color.toString() + " " + strokeWeight;
+    }
 
     @Override
     public void move(double dx, double dy) {
@@ -189,7 +174,7 @@ public class ArrowShape extends Shape implements ShapeObserver {
 
     }
 
-    //     Удаление наблюдателя при удалении стрелки
+
     public void removeObservers() {
         objectA.removeObserver(this);
         objectB.removeObserver(this);

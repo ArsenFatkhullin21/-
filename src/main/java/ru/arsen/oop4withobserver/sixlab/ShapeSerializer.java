@@ -28,9 +28,10 @@ public class ShapeSerializer {
         File file = fileChooser.showSaveDialog(stage);
         if (file != null) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+
                 writer.write(shapes.size() + "\n");
 
-                // Контекст всех реально сохранённых фигур (для ArrowShape индексов)
+
                 List<Shape> contextShapes = new ArrayList<>();
 
                 for (Shape shape : shapes) {
@@ -46,24 +47,31 @@ public class ShapeSerializer {
         return false;
     }
 
-    private static void saveShape(Writer writer, Shape shape, List<Shape> contextShapes) throws IOException {
+    private static void saveShape(BufferedWriter writer, Shape shape, List<Shape> contextShapes) throws IOException {
         if (shape instanceof ShapeGroup group) {
+
             writer.write("ShapeGroup " + group.save() + "\n");
             writer.write(group.getShapes().size() + "\n");
 
+
             for (Shape inner : group.getShapes()) {
-                saveShape(writer, inner, contextShapes); // Рекурсивное сохранение подфигур
+                saveShape(writer, inner, contextShapes);
             }
+
+
+            contextShapes.add(group);
         } else if (shape instanceof ArrowShape arrow) {
+
             int indexA = contextShapes.indexOf(arrow.getObjectA());
             int indexB = contextShapes.indexOf(arrow.getObjectB());
 
-            writer.write("ArrowShape " + indexA + " " + indexB + "\n");
+            writer.write("ArrowShape "  + indexA + " " + indexB + "\n");
         } else {
+
             writer.write(shape.getClass().getSimpleName() + " " + shape.save() + "\n");
         }
 
-        // Добавляем в контекст только НЕ группы (Arrow тоже нужен, чтобы знать порядок фигур для стрелок)
+
         if (!(shape instanceof ShapeGroup)) {
             contextShapes.add(shape);
         }

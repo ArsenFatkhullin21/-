@@ -13,7 +13,7 @@ public abstract class Shape {
     protected double y;
     protected double width;
     protected double height;
-    protected Color color;
+    protected Color color = Color.TRANSPARENT;
     protected int strokeWeight;
 
     private final List<ShapeObserver> observers = new ArrayList<>();

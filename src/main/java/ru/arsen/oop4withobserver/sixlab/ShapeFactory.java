@@ -100,8 +100,8 @@ public class ShapeFactory implements AbstractShapeFactory{
         String[] params = data.split(" ");
 
 
-        double x = 0;
-        double y = 0;
+        double x = Double.MAX_VALUE;
+        double y = Double.MAX_VALUE;
         double width = 0;
         double height =0;
         Color color = Color.TRANSPARENT;

@@ -1,7 +1,10 @@
 package ru.arsen.oop4withobserver.myList;
 
+import ru.arsen.oop4withobserver.sevenLab.ListObserver;
+
 import java.util.*;
 import java.util.function.Consumer;
+
 
 public class MyList<T> implements Iterable<T> {
 
@@ -9,22 +12,21 @@ public class MyList<T> implements Iterable<T> {
     private Node<T> tail;
     private int size;
 
-    // ===== Новое: список наблюдателей =====
-    private final List<Consumer<MyList<T>>> observers = new ArrayList<>();
+    private final List<ListObserver> observers = new ArrayList<>();
 
-    // Метод для добавления наблюдателя
-    public void addObserver(Consumer<MyList<T>> observer) {
+
+    public void addObserver(ListObserver observer) {
         observers.add(observer);
     }
 
-    // Метод для уведомления всех наблюдателей
+
     private void notifyObservers() {
-        for (Consumer<MyList<T>> observer : observers) {
-            observer.accept(this);
+        for (ListObserver observer : observers) {
+            observer.update(this);
         }
     }
 
-    // ========================
+
 
     public MyList() {
         this.head = null;
@@ -42,7 +44,7 @@ public class MyList<T> implements Iterable<T> {
             tail = newNode;
         }
         size++;
-        notifyObservers(); // 🔔 уведомление
+        notifyObservers();
     }
 
     public T get(int index) {
@@ -110,7 +112,7 @@ public class MyList<T> implements Iterable<T> {
                     tail = previous;
                 }
                 size--;
-                notifyObservers(); // 🔔 уведомление
+                notifyObservers();
                 return;
             }
             previous = current;
@@ -122,7 +124,7 @@ public class MyList<T> implements Iterable<T> {
         for (T value : otherList) {
             remove(value);
         }
-        notifyObservers(); // 🔔 уведомление
+        notifyObservers();
     }
 
     public int size() {
@@ -148,7 +150,7 @@ public class MyList<T> implements Iterable<T> {
         head = null;
         tail = null;
         size = 0;
-        notifyObservers(); // 🔔 уведомление
+        notifyObservers();
     }
 
     @Override
